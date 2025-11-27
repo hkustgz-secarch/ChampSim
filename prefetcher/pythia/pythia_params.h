@@ -106,7 +106,7 @@ static const std::vector<int32_t> dyn_degrees_type2_hbw = {1, 2, 4, 6};
 //------------------------------------//
 static const std::vector<int32_t> le_featurewise_active_features = {0, 10};
 static const std::vector<int32_t> le_featurewise_num_tilings = {3, 3};
-static const std::vector<int32_t> le_featurewise_num_tiles = {12, 128};
+static const std::vector<int32_t> le_featurewise_num_tiles = {128, 128};
 static const std::vector<int32_t> le_featurewise_hash_types = {2, 2};
 static const std::vector<int32_t> le_featurewise_enable_tiling_offset = {1, 1};
 static const uint32_t le_featurewise_pooling_type = 2;
