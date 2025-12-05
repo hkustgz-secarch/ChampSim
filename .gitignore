@@ -6,8 +6,6 @@ _configuration.mk
 
 bin/
 
-results/log/
-
 **/*.o
 **/*.d
 

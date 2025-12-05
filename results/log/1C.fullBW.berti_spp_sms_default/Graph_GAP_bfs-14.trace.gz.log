@@ -1,0 +1,32 @@
+[VMEM] WARNING: physical memory size is smaller than virtual memory size.
+
+*** ChampSim Multicore Out-of-Order Simulator ***
+Warmup Instructions: 50000000
+Simulation Instructions: 200000000
+Number of CPUs: 1
+Page size: 4096
+Core 0: /local-ssd/ben/dpc4-traces/Graph/GAP/bfs-14.trace.gz
+Initialize SIGNATURE TABLE
+ST_SET: 1
+ST_WAY: 256
+ST_TAG_BIT: 16
+
+Initialize PATTERN TABLE
+PT_SET: 512
+PT_WAY: 4
+SIG_DELTA_BIT: 7
+C_SIG_BIT: 4
+C_DELTA_BIT: 4
+
+Initialize PREFETCH FILTER
+FILTER_SET: 1024
+ L1D Berti prefetcher
+Off-chip DRAM Size: 64 GiB Channels: 1 Width: 64-bit Data Rate: 4807 MT/s
+Heartbeat CPU 0 instructions: 500006 cycles: 117038 heartbeat IPC: 4.272 cumulative IPC: 4.272 (Simulation time: 00 hr 00 min 02 sec)
+Heartbeat CPU 0 instructions: 1000009 cycles: 229703 heartbeat IPC: 4.438 cumulative IPC: 4.353 (Simulation time: 00 hr 00 min 04 sec)
+Heartbeat CPU 0 instructions: 1500014 cycles: 342212 heartbeat IPC: 4.444 cumulative IPC: 4.383 (Simulation time: 00 hr 00 min 06 sec)
+Heartbeat CPU 0 instructions: 2000018 cycles: 454594 heartbeat IPC: 4.449 cumulative IPC: 4.4 (Simulation time: 00 hr 00 min 08 sec)
+Heartbeat CPU 0 instructions: 2500022 cycles: 566960 heartbeat IPC: 4.45 cumulative IPC: 4.41 (Simulation time: 00 hr 00 min 10 sec)
+Heartbeat CPU 0 instructions: 3000026 cycles: 679453 heartbeat IPC: 4.445 cumulative IPC: 4.415 (Simulation time: 00 hr 00 min 12 sec)
+[GHR] Cannot find a replacement victim!
+1C.fullBW.berti_spp_sms: prefetcher/spp_dev/spp_dev.cc:531: void spp_dev::GLOBAL_REGISTER::update_entry(uint32_t, uint32_t, spp_dev::offset_type, champsim::address_slice<spp_dev::block_in_page_extent>::difference_type): Assertion `0' failed.
