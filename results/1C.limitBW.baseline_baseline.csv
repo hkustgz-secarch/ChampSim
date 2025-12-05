@@ -129,3 +129,4 @@ ai-ml,biogpt.cpp-ggml-model-tocilizumab.2.champsimtrace.gz,0.1715,200000000,1166
 SPEC17,619.lbm_s-2677B.champsimtrace.xz,0.2113,200000001,946677919,SUCCESS,10333.24
 ai-ml,biogpt.cpp-ggml-model-tocilizumab.1.champsimtrace.gz,0.1657,200000001,1206666698,SUCCESS,10647.36
 SPEC17,605.mcf_s-1644B.champsimtrace.xz,0.1053,200000000,1900077041,SUCCESS,13308.21
+ai-ml,rwkv_trace_1.champsimtrace.gz,0.03789,200000006,5278597722,SUCCESS,51683.58
