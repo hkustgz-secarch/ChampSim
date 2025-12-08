@@ -102,7 +102,7 @@ def main():
     # 1. 自动构建输出文件名
     base_name = os.path.splitext(os.path.basename(args.baseline))[0]
     exp_name = os.path.splitext(os.path.basename(args.experiment))[0]
-    output_filename = f"{base_name}_vs_{exp_name}.txt"
+    output_filename = f"results/{base_name}_vs_{exp_name}.txt"
     
     logger = DualLogger(output_filename)
 
