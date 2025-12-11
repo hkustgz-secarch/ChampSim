@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string>
 #define BITMAP_MAX_SIZE 64
-
+#undef Bitmap
 typedef std::bitset<BITMAP_MAX_SIZE> Bitmap;
 
 class BitmapHelper

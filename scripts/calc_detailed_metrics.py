@@ -9,26 +9,43 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 输入 Log 目录
 # INPUT_REL_PATH = "../results/log/1C.fullBW.berti_pythia_sms_default"
-INPUT_REL_PATH = "../results/log/1C.fullBW.baseline_updatePythia"
+# INPUT_REL_PATH = "../results/log/1C.fullBW.baseline_updatePythia"
 # INPUT_REL_PATH = "../results/log/1C.fullBW.nopref_baseline"
+# INPUT_REL_PATH = "../results/log/1C.fullBW.bertiMcmc_pythia_sms_default"
+INPUT_REL_PATH = "../results/log/1C.fullBW.berti_pythia_sms_4096sets_default"
+import os
+import csv
+import re
+import pandas as pd
 
-# 输出目录 (已重命名为 detailed_metrics)
+# ================= 配置区域 =================
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 输入 Log 目录列表 (将需要处理的相对路径都放在这里)
+INPUT_DIR_LIST = [
+    # "../results/log/1C.fullBW.berti_pythia_sms_4096sets_default",
+    # "../results/log/1C.fullBW.berti_pythia_sms_default",
+    # "../results/log/1C.fullBW.baseline_updatePythia",
+    # "../results/log/1C.fullBW.nopref_baseline",
+    # "../results/log/1C.fullBW.bertiMcmc_pythia_sms_default",
+    "../results/log/1C.fullBW.cmc_pythia_sms_default",
+]
+
+# 输出目录
 OUTPUT_METRICS_DIR = "../results/detailed_metrics"
 
 # 定义需要处理的 Cache 类型及其顺序
-# 注意：这里只写核心名字，脚本会自动组合 LOAD 和 PREFETCH
-# 排除 ITLB 和 L1I
-TARGET_CACHES = ['cpu0_L1D', 'cpu0_L2C', 'LLC'] 
+TARGET_CACHES = ['cpu0_L1I', 'cpu0_L1D', 'cpu0_L2C', 'LLC'] 
 
 # 定义需要提取的操作类型
 TARGET_OPS = ['LOAD', 'PREFETCH']
 
 # ===========================================
 
-def get_paths():
+def get_paths(input_rel_path):
     """解析路径并确保目录存在"""
-    input_dir = os.path.normpath(os.path.join(SCRIPT_DIR, INPUT_REL_PATH))
-    # 修改输出路径变量
+    input_dir = os.path.normpath(os.path.join(SCRIPT_DIR, input_rel_path))
     metrics_dir = os.path.normpath(os.path.join(SCRIPT_DIR, OUTPUT_METRICS_DIR))
     
     os.makedirs(metrics_dir, exist_ok=True)
@@ -58,9 +75,8 @@ def clean_filename(fname):
 def process_file(filepath, filename):
     """
     解析单个日志文件
-    只提取 TARGET_CACHES 中的组件，且只提取 LOAD 和 PREFETCH 行
     """
-    entries = [] # 存储该文件的所有条目
+    entries = [] 
     ipc_value = 0.0
     
     try:
@@ -86,8 +102,8 @@ def process_file(filepath, filename):
                     # 获取 Cache 名称 (如 cpu0_L1D)
                     cache_name = full_name_part.split("->")[1] if "->" in full_name_part else full_name_part
                     
-                    # === 过滤 1: 排除 ITLB 和 L1I ===
-                    if "ITLB" in cache_name or "L1I" in cache_name:
+                    # === 过滤 1: 仅排除 ITLB ===
+                    if "ITLB" in cache_name:
                         continue
                         
                     # 获取操作类型 (LOAD / PREFETCH ...)
@@ -102,14 +118,13 @@ def process_file(filepath, filename):
                     miss_val = parse_line_value(line, "MISS:")
                     
                     # 构建条目
-                    # 我们将 CacheName 和 Operation 组合起来作为一个唯一的 Key
                     component_name = f"{cache_name}_{row_type}"
                     
                     entries.append({
                         'Filename': filename,
-                        'Component': component_name,  # 组合键
-                        'OriginalCache': cache_name,  # 辅助排序
-                        'Operation': row_type,        # 辅助排序
+                        'Component': component_name,
+                        'OriginalCache': cache_name,
+                        'Operation': row_type,
                         'Access': access_val,
                         'Miss': miss_val
                     })
@@ -134,12 +149,9 @@ def generate_summary(df, output_prefix, output_dir):
     ipc_df = df[['Filename', 'IPC']].drop_duplicates().set_index('Filename')
     
     # 3. Pivot 透视表
-    # Index: Filename
-    # Columns: Component (例如 cpu0_L1D_LOAD)
-    # Values: Access, MissRate
     pivot_df = df.pivot(index='Filename', columns='Component', values=['Access', 'MissRate(%)'])
     
-    # 4. 构建理想的列顺序
+    # 4. 构建理想的列顺序 并 进行重命名
     final_col_order = []
     new_col_names = {} 
 
@@ -150,21 +162,26 @@ def generate_summary(df, output_prefix, output_dir):
             # 组合出 Component 名字，例如 cpu0_L1D_LOAD
             comp_key = f"{cache}_{op}"
             
-            # 构建原始 Pivot 的 MultiIndex 列名
-            col_access_orig = ('Access', comp_key)
-            col_rate_orig = ('MissRate(%)', comp_key)
-            
-            # 构建新的显示列名 (简化名字)
+            # --- 表头缩写逻辑 ---
+            # 简化 Cache 名字
             simple_name = cache.replace("cpu0_", "").replace("LLC", "LLC")
             
-            name_access_new = f"{simple_name}_{op}_Access"
-            name_rate_new = f"{simple_name}_{op}_MissRate(%)"
+            # 简化 Operation 名字 (PREFETCH -> PF)
+            op_short = "PF" if op == "PREFETCH" else op
+            
+            # 构建新的列名 (Acc 代替 Access, MR 代替 MissRate)
+            name_access_new = f"{simple_name}_{op_short}_Acc"
+            name_rate_new = f"{simple_name}_{op_short}_MR"
+            
+            # 原始 Pivot 的 MultiIndex 列名
+            col_access_orig = ('Access', comp_key)
+            col_rate_orig = ('MissRate(%)', comp_key)
             
             # 存入映射
             new_col_names[col_access_orig] = name_access_new
             new_col_names[col_rate_orig] = name_rate_new
             
-            # 加入顺序列表 (先 Access 后 MissRate)
+            # 加入顺序列表
             final_col_order.append(name_access_new)
             final_col_order.append(name_rate_new)
 
@@ -180,9 +197,9 @@ def generate_summary(df, output_prefix, output_dir):
     final_df = final_df.join(ipc_df)
     
     # 8. 格式化数据
-    # Access 列转整数
+    # Access/Acc 列转整数
     for col in final_df.columns:
-        if "Access" in col:
+        if "Acc" in col or "Access" in col:
             final_df[col] = final_df[col].astype(int)
             
     # 重置索引
@@ -211,46 +228,57 @@ def generate_summary(df, output_prefix, output_dir):
     print(f"  -> CSV: {os.path.basename(out_csv)}")
     print(f"  -> TXT: {os.path.basename(out_txt)}")
 
-def main():
-    # 获取路径
-    input_dir, metrics_dir, dir_name = get_paths()
+def process_directory_task(rel_path):
+    """处理单个目录的任务函数"""
+    input_dir, metrics_dir, dir_name = get_paths(rel_path)
     
+    print("-" * 60)
+    print(f"正在处理目录: {dir_name}")
+    print(f"完整路径: {input_dir}")
+
     if not os.path.exists(input_dir):
-        print(f"错误: 目录不存在 {input_dir}")
+        print(f"错误: 目录不存在 {input_dir}，跳过。")
         return
-        
-    print(f"目标目录: {input_dir}")
-    print(f"输出目录: {metrics_dir}")
     
     files = sorted([f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))])
     
+    if not files:
+        print("目录为空，跳过。")
+        return
+
     all_data = []
-    print(f"开始处理 {len(files)} 个文件...")
+    print(f"找到 {len(files)} 个文件，开始解析...")
     
     for idx, filename in enumerate(files):
         filepath = os.path.join(input_dir, filename)
         entries = process_file(filepath, filename)
         all_data.extend(entries)
         
-        if (idx + 1) % 100 == 0:
-            print(f"进度: {idx + 1}/{len(files)}")
+        # 简单的进度显示 (每500个文件显示一次，避免刷屏)
+        if len(files) > 500 and (idx + 1) % 500 == 0:
+            print(f"  进度: {idx + 1}/{len(files)}")
             
     if not all_data:
-        print("未提取到数据。请检查 Log 格式或过滤条件。")
+        print("未提取到有效数据。请检查 Log 格式或过滤条件。")
         return
 
     # 创建 DataFrame
     df_raw = pd.DataFrame(all_data)
     
-    # 生成 Summary (输出到 detailed_metrics 文件夹)
-    print(f"\n正在生成汇总表 (L1D/L2/LLC Split LOAD/PREFETCH)...")
+    # 生成 Summary
     df_summary = df_raw.copy()
     df_summary['Filename'] = df_summary['Filename'].apply(clean_filename)
     
-    # 传入新的 metrics_dir
     generate_summary(df_summary, dir_name, metrics_dir)
+
+def main():
+    print("=== 批量 Log 解析脚本开始 ===")
+    print(f"共配置了 {len(INPUT_DIR_LIST)} 个输入目录。\n")
     
-    print("\n完成！")
+    for rel_path in INPUT_DIR_LIST:
+        process_directory_task(rel_path)
+        
+    print("\n=== 所有任务完成 ===")
 
 if __name__ == "__main__":
     main()

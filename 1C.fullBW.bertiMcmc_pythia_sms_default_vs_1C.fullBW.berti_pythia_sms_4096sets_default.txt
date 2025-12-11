@@ -1,0 +1,144 @@
+==========================================================================================
+Speedup Comparison Report
+==========================================================================================
+Baseline   : results/1C.fullBW.bertiMcmc_pythia_sms_default.csv
+Experiment : results/1C.fullBW.berti_pythia_sms_4096sets_default.csv
+------------------------------------------------------------------------------------------
+Trace Name                                                                                  | IPC Base   | IPC Exp    | Speedup   
+----------------------------------------------------------------------------------------------------------------------------------
+Graph/GAP/bc-0                                                                              | 0.1975     | 0.2094     | 1.0603    *
+Graph/GAP/bc-12                                                                             | 0.1805     | 0.1897     | 1.0510    *
+Graph/GAP/bfs-10                                                                            | 0.7474     | 0.7141     | 0.9554   
+Graph/GAP/bfs-14                                                                            | 0.8013     | 0.7876     | 0.9829   
+Graph/GAP/cc-13                                                                             | 0.3802     | 0.3767     | 0.9908   
+Graph/GAP/cc-14                                                                             | 0.4317     | 0.4294     | 0.9947   
+Graph/GAP/cc-5                                                                              | 0.4990     | 0.4982     | 0.9984   
+Graph/GAP/sssp-10                                                                           | 0.6581     | 0.6573     | 0.9988   
+Graph/GAP/sssp-14                                                                           | 0.6557     | 0.6567     | 1.0015    *
+Graph/GMS/gms.k_clique_count_set_based.soc-pokec-relationships.slice-4                      | 2.2380     | 2.2500     | 1.0054    *
+Graph/GMS/gms.k_clique_list_danisch_edge_parallel.soc-pokec-relationships.slice-367         | 1.0840     | 1.1140     | 1.0277    *
+Graph/GMS/gms.k_clique_list_danisch_edge_parallel.soc-pokec-relationships.slice-80          | 1.0360     | 1.0550     | 1.0183    *
+Graph/GMS/gms.k_clique_list_danisch_node_parallel.soc-pokec-relationships.slice-236         | 1.0060     | 1.0280     | 1.0219    *
+Graph/GMS/gms.k_clique_list_danisch_node_parallel.soc-pokec-relationships.slice-248         | 0.8950     | 0.9130     | 1.0201    *
+Graph/GMS/gms.k_clique_list_danisch_serial.soc-pokec-relationships.slice-4                  | 2.2380     | 2.2530     | 1.0067    *
+Graph/GMS/gms.k_clique_star_list.soc-pokec-relationships.slice-1291                         | 1.3770     | 1.4100     | 1.0240    *
+Graph/GMS/gms.maximal_clique_enum_bron_kerbosch.soc-pokec-relationships.slice-3852          | 2.2460     | 2.2120     | 0.9849   
+Graph/GMS/gms.triangle_count.soc-pokec-relationships.slice-117                              | 0.7545     | 0.7732     | 1.0248    *
+Graph/GMS/gms.triangle_count.soc-pokec-relationships.slice-137                              | 0.5657     | 0.5800     | 1.0253    *
+Graph/GMS/gms.triangle_count.soc-pokec-relationships.slice-360                              | 0.5585     | 0.5708     | 1.0220    *
+Graph/Ligra/ligra_BFSCC.com-lj.ungraph.gcc_6.3.0_O3.drop_15500M.length_250M                 | 1.4720     | 1.4510     | 0.9857   
+Graph/Ligra/ligra_BFSCC.com-lj.ungraph.gcc_6.3.0_O3.drop_17000M.length_250M                 | 1.9300     | 1.9600     | 1.0155    *
+Graph/Ligra/ligra_BellmanFord.com-lj.ungraph.gcc_6.3.0_O3.drop_22250M.length_250M           | 1.4690     | 1.3980     | 0.9517   
+Graph/Ligra/ligra_CF.com-lj.ungraph.gcc_6.3.0_O3.drop_154750M.length_250M                   | 1.8240     | 1.8520     | 1.0154    *
+Graph/Ligra/ligra_CF.com-lj.ungraph.gcc_6.3.0_O3.drop_184750M.length_250M                   | 1.0060     | 1.0330     | 1.0268    *
+Graph/Ligra/ligra_Components-Shortcut.com-lj.ungraph.gcc_6.3.0_O3.drop_17000M.length_250M   | 1.9320     | 1.9600     | 1.0145    *
+Graph/Ligra/ligra_Components-Shortcut.com-lj.ungraph.gcc_6.3.0_O3.drop_22000M.length_250M   | 0.4236     | 0.4251     | 1.0035    *
+Graph/Ligra/ligra_Components.com-lj.ungraph.gcc_6.3.0_O3.drop_15750M.length_250M            | 1.6280     | 1.5410     | 0.9466   
+Graph/Ligra/ligra_MIS.com-lj.ungraph.gcc_6.3.0_O3.drop_15750M.length_250M                   | 1.6270     | 1.5410     | 0.9471   
+Graph/Ligra/ligra_MIS.com-lj.ungraph.gcc_6.3.0_O3.drop_21250M.length_250M                   | 2.1530     | 2.0160     | 0.9364   
+Graph/Ligra/ligra_PageRank.com-lj.ungraph.gcc_6.3.0_O3.drop_51000M.length_250M              | 1.1740     | 1.1740     | 1.0000    
+Graph/Ligra/ligra_PageRankDelta.com-lj.ungraph.gcc_6.3.0_O3.drop_17000M.length_250M         | 1.9160     | 1.9500     | 1.0177    *
+Graph/Ligra/ligra_PageRankDelta.com-lj.ungraph.gcc_6.3.0_O3.drop_24000M.length_250M         | 1.0230     | 1.0580     | 1.0342    *
+Graph/Ligra/ligra_PageRankDelta.com-lj.ungraph.gcc_6.3.0_O3.drop_6000M.length_250M          | 1.0840     | 1.0670     | 0.9843   
+Graph/Ligra/ligra_Radii.com-lj.ungraph.gcc_6.3.0_O3.drop_24500M.length_250M                 | 1.0090     | 0.9626     | 0.9540   
+Graph/Ligra/ligra_Radii.com-lj.ungraph.gcc_6.3.0_O3.drop_25000M.length_250M                 | 0.2660     | 0.2861     | 1.0756    *
+Graph/Ligra/ligra_Triangle.com-lj.ungraph.gcc_6.3.0_O3.drop_25000M.length_250M              | 0.8769     | 0.7583     | 0.8648   
+SPEC17/602.gcc_s-1850B                                                                      | 1.5250     | 1.3890     | 0.9108   
+SPEC17/602.gcc_s-734B                                                                       | 2.2090     | 2.0020     | 0.9063   
+SPEC17/603.bwaves_s-1740B                                                                   | 2.5850     | 2.4980     | 0.9663   
+SPEC17/603.bwaves_s-891B                                                                    | 1.8960     | 1.6740     | 0.8829   
+SPEC17/605.mcf_s-1536B                                                                      | 0.5847     | 0.7962     | 1.3617    *
+SPEC17/605.mcf_s-1554B                                                                      | 0.6979     | 0.6786     | 0.9723   
+SPEC17/605.mcf_s-1644B                                                                      | 0.2249     | 0.2240     | 0.9960   
+SPEC17/605.mcf_s-472B                                                                       | 0.7606     | 0.7409     | 0.9741   
+SPEC17/605.mcf_s-484B                                                                       | 0.8958     | 0.8510     | 0.9500   
+SPEC17/607.cactuBSSN_s-2421B                                                                | 2.7420     | 2.7420     | 1.0000    
+SPEC17/619.lbm_s-2676B                                                                      | 1.1000     | 1.0970     | 0.9973   
+SPEC17/619.lbm_s-2677B                                                                      | 0.6152     | 0.6133     | 0.9969   
+SPEC17/620.omnetpp_s-874B                                                                   | 0.5654     | 0.5543     | 0.9804   
+SPEC17/621.wrf_s-6673B                                                                      | 2.2690     | 2.2960     | 1.0119    *
+SPEC17/623.xalancbmk_s-10B                                                                  | 0.6417     | 0.6021     | 0.9383   
+SPEC17/649.fotonik3d_s-1176B                                                                | 3.4700     | 3.3310     | 0.9599   
+SPEC17/649.fotonik3d_s-7084B                                                                | 2.8000     | 2.6990     | 0.9639   
+SPEC17/654.roms_s-293B                                                                      | 2.6150     | 2.7800     | 1.0631    *
+SPEC17/654.roms_s-294B                                                                      | 2.3910     | 2.5750     | 1.0770    *
+SPEC17/654.roms_s-523B                                                                      | 1.7110     | 1.6780     | 0.9807   
+ai-ml/bark.cpp-bark-small.coarse_token_gen.1                                                | 3.2310     | 3.2580     | 1.0084    *
+ai-ml/bark.cpp-bark-small.coarse_token_gen.2                                                | 2.9990     | 3.0810     | 1.0273    *
+ai-ml/bark.cpp-bark-small.coarse_token_gen.4                                                | 2.6300     | 2.6570     | 1.0103    *
+ai-ml/bark.cpp-bark-small.coarse_token_gen.5                                                | 1.8820     | 1.8930     | 1.0058    *
+ai-ml/biogpt.cpp-ggml-model-tocilizumab.1                                                   | 0.5906     | 0.5884     | 0.9963   
+ai-ml/biogpt.cpp-ggml-model-tocilizumab.2                                                   | 0.5986     | 0.5967     | 0.9968   
+ai-ml/biogpt.cpp-ggml-model-tocilizumab.3                                                   | 0.5946     | 0.5917     | 0.9951   
+ai-ml/clip_trace_1                                                                          | 3.5390     | 3.5350     | 0.9989   
+ai-ml/clip_trace_3                                                                          | 3.1990     | 3.2130     | 1.0044    *
+ai-ml/llama2.c-stories110M.1                                                                | 2.0570     | 1.9450     | 0.9456   
+ai-ml/llama2.c-stories110M.2                                                                | 2.0470     | 1.9330     | 0.9443   
+ai-ml/llama2.c-stories110M.3                                                                | 2.0230     | 1.9230     | 0.9506   
+ai-ml/llama2.c-stories15M.1                                                                 | 2.3000     | 2.1930     | 0.9535   
+ai-ml/llama2.c-stories15M.2                                                                 | 2.2800     | 2.1770     | 0.9548   
+ai-ml/llama2.c-stories15M.3                                                                 | 2.3140     | 2.1430     | 0.9261   
+ai-ml/llama2.c-stories42M.1                                                                 | 2.4350     | 2.2100     | 0.9076   
+ai-ml/llama2.c-stories42M.2                                                                 | 2.3520     | 2.2080     | 0.9388   
+ai-ml/llama2.c-stories42M.3                                                                 | 2.3610     | 2.2180     | 0.9394   
+ai-ml/rwkv_trace_1                                                                          | 0.1162     | 0.1164     | 1.0017    *
+ai-ml/rwkv_trace_2                                                                          | 0.6848     | 0.6813     | 0.9949   
+ai-ml/stable-diffusion.cpp-sd-v1-4.ckpt.1                                                   | 2.2740     | 2.3520     | 1.0343    *
+ai-ml/stable-diffusion.cpp-sd-v1-4.ckpt.2                                                   | 2.6130     | 2.6750     | 1.0237    *
+ai-ml/stable-diffusion.cpp-v1-5-pruned-emaonly.2                                            | 2.5900     | 2.6470     | 1.0220    *
+ai-ml/stable-diffusion.cpp-v2-1_768-nonema-pruned.1                                         | 1.7220     | 1.7970     | 1.0436    *
+ai-ml/stable-diffusion.cpp-v2-1_768-nonema-pruned.2                                         | 2.5460     | 2.6050     | 1.0232    *
+ai-ml/stable-diffusion.cpp-v2-1_768-nonema-pruned.3                                         | 2.6180     | 2.6750     | 1.0218    *
+ai-ml/vit.cpp-base-ggml-model-f16.gguf.armadillo.1                                          | 3.3870     | 3.3960     | 1.0027    *
+ai-ml/vit.cpp-large-ggml-model-f16.gguf.armadillo.1                                         | 3.4690     | 3.4700     | 1.0003    *
+ai-ml/whisper_trace_1                                                                       | 2.9640     | 2.9750     | 1.0037    *
+ai-ml/whisper_trace_2                                                                       | 2.9750     | 2.9860     | 1.0037    *
+ai-ml/whisper_trace_3                                                                       | 2.9780     | 2.9830     | 1.0017    *
+gtraces_v2/arizona_0000                                                                     | 1.7000     | 1.7620     | 1.0365    *
+gtraces_v2/arizona_0001                                                                     | 1.7050     | 1.7540     | 1.0287    *
+gtraces_v2/arizona_0002                                                                     | 1.9830     | 2.0690     | 1.0434    *
+gtraces_v2/charlie_0000                                                                     | 1.3650     | 1.4230     | 1.0425    *
+gtraces_v2/charlie_0001                                                                     | 1.2730     | 1.3350     | 1.0487    *
+gtraces_v2/charlie_0002                                                                     | 0.8698     | 0.8998     | 1.0345    *
+gtraces_v2/charlie_0003                                                                     | 0.7916     | 0.8154     | 1.0301    *
+gtraces_v2/charlie_0004                                                                     | 0.9862     | 1.0230     | 1.0373    *
+gtraces_v2/merced_0000                                                                      | 0.7579     | 0.8158     | 1.0764    *
+gtraces_v2/merced_0001                                                                      | 0.5848     | 0.6338     | 1.0838    *
+gtraces_v2/merced_0002                                                                      | 0.6234     | 0.6766     | 1.0853    *
+gtraces_v2/merced_0003                                                                      | 0.5806     | 0.6330     | 1.0903    *
+gtraces_v2/merced_0004                                                                      | 0.6548     | 0.7202     | 1.0999    *
+gtraces_v2/sierra.a.3_0000                                                                  | 0.4242     | 0.5378     | 1.2678    *
+gtraces_v2/sierra.a.3_0001                                                                  | 0.5174     | 0.6332     | 1.2238    *
+gtraces_v2/sierra.a.3_0002                                                                  | 0.5110     | 0.6232     | 1.2196    *
+gtraces_v2/sierra.a.3_0003                                                                  | 0.5019     | 0.6200     | 1.2353    *
+gtraces_v2/sierra.a.3_0004                                                                  | 0.4857     | 0.6040     | 1.2436    *
+gtraces_v2/sierra.a.4_0000                                                                  | 0.4480     | 0.5148     | 1.1491    *
+gtraces_v2/sierra.a.4_0001                                                                  | 0.3745     | 0.4494     | 1.2000    *
+gtraces_v2/sierra.a.4_0002                                                                  | 0.3907     | 0.4618     | 1.1820    *
+gtraces_v2/sierra.a.4_0003                                                                  | 0.4458     | 0.5110     | 1.1463    *
+gtraces_v2/sierra.a.4_0004                                                                  | 0.4710     | 0.5303     | 1.1259    *
+gtraces_v2/sierra.a.6_0000                                                                  | 0.4850     | 0.5933     | 1.2233    *
+gtraces_v2/sierra.a.6_0001                                                                  | 0.4575     | 0.5610     | 1.2262    *
+gtraces_v2/sierra.a.6_0002                                                                  | 0.4572     | 0.5707     | 1.2483    *
+gtraces_v2/sierra.a.6_0003                                                                  | 0.4387     | 0.5437     | 1.2393    *
+gtraces_v2/sierra.a.6_0004                                                                  | 0.4596     | 0.5827     | 1.2678    *
+gtraces_v2/tahoe_0000                                                                       | 0.6410     | 0.7286     | 1.1367    *
+gtraces_v2/tahoe_0001                                                                       | 0.5354     | 0.6065     | 1.1328    *
+gtraces_v2/tahoe_0002                                                                       | 0.7609     | 0.7766     | 1.0206    *
+gtraces_v2/tahoe_0003                                                                       | 0.5325     | 0.6056     | 1.1373    *
+gtraces_v2/tahoe_0004                                                                       | 0.6461     | 0.7205     | 1.1152    *
+gtraces_v2/tango_0000                                                                       | 0.5902     | 0.6925     | 1.1733    *
+gtraces_v2/tango_0001                                                                       | 0.6822     | 0.7753     | 1.1365    *
+gtraces_v2/tango_0002                                                                       | 0.6157     | 0.7137     | 1.1592    *
+gtraces_v2/tango_0003                                                                       | 0.5622     | 0.6652     | 1.1832    *
+gtraces_v2/tango_0004                                                                       | 0.6115     | 0.7211     | 1.1792    *
+gtraces_v2/yankee_0000                                                                      | 0.5772     | 0.6640     | 1.1504    *
+gtraces_v2/yankee_0001                                                                      | 0.5911     | 0.6764     | 1.1443    *
+gtraces_v2/yankee_0002                                                                      | 0.7243     | 0.8335     | 1.1508    *
+gtraces_v2/yankee_0003                                                                      | 0.5910     | 0.6924     | 1.1716    *
+gtraces_v2/yankee_0004                                                                      | 0.5836     | 0.6860     | 1.1755    *
+----------------------------------------------------------------------------------------------------------------------------------
+Summary (131 valid traces):
+Geometric Mean Speedup : 1.0393
+Arithmetic Mean Speedup: 1.0432
+==========================================================================================

@@ -1,0 +1,3 @@
+[VMEM] WARNING: physical memory size is smaller than virtual memory size.
+traces: At least 4 required but received 1
+Run with --help for more information.
