@@ -94,13 +94,15 @@ auto CACHE::operator=(CACHE&& other) -> CACHE&
 
 CACHE::tag_lookup_type::tag_lookup_type(const request_type& req, bool local_pref, bool skip)
     : address(req.address), v_address(req.v_address), data(req.data), ip(req.ip), instr_id(req.instr_id), pf_metadata(req.pf_metadata), cpu(req.cpu),
-      type(req.type), prefetch_from_this(local_pref), skip_fill(skip), is_translated(req.is_translated), instr_depend_on_me(req.instr_depend_on_me)
+      type(req.type), prefetch_from_this(local_pref), skip_fill(skip), is_translated(req.is_translated), is_instr(req.is_instr),
+      instr_depend_on_me(req.instr_depend_on_me)
 {
 }
 
 CACHE::mshr_type::mshr_type(const tag_lookup_type& req, champsim::chrono::clock::time_point _time_enqueued)
     : address(req.address), v_address(req.v_address), ip(req.ip), instr_id(req.instr_id), cpu(req.cpu), type(req.type),
-      prefetch_from_this(req.prefetch_from_this), time_enqueued(_time_enqueued), instr_depend_on_me(req.instr_depend_on_me), to_return(req.to_return)
+      prefetch_from_this(req.prefetch_from_this), is_instr(req.is_instr), time_enqueued(_time_enqueued), instr_depend_on_me(req.instr_depend_on_me),
+      to_return(req.to_return)
 {
 }
 
@@ -169,7 +171,7 @@ champsim::address CACHE::module_address(const T& element) const
 template <typename T>
 bool CACHE::module_is_instr(const T& element) const
 {
-  return element.v_address == element.ip;
+  return element.is_instr;
 }
 
 bool CACHE::handle_fill(const mshr_type& fill_mshr)
@@ -321,6 +323,7 @@ auto CACHE::mshr_and_forward_packet(const tag_lookup_type& handle_pkt) -> std::p
   fwd_pkt.data = handle_pkt.data;
   fwd_pkt.instr_id = handle_pkt.instr_id;
   fwd_pkt.ip = handle_pkt.ip;
+  fwd_pkt.is_instr = handle_pkt.is_instr;
 
   fwd_pkt.instr_depend_on_me = handle_pkt.instr_depend_on_me;
   fwd_pkt.response_requested = (!handle_pkt.prefetch_from_this || !handle_pkt.skip_fill);
@@ -686,6 +689,7 @@ void CACHE::issue_translation(tag_lookup_type& q_entry) const
     fwd_pkt.data = q_entry.data;
     fwd_pkt.instr_id = q_entry.instr_id;
     fwd_pkt.ip = q_entry.ip;
+    fwd_pkt.is_instr = q_entry.is_instr;
 
     fwd_pkt.instr_depend_on_me = q_entry.instr_depend_on_me;
     fwd_pkt.is_translated = true;
