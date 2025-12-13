@@ -31,6 +31,7 @@
 #include "util/algorithm.h"
 #include "util/bits.h"
 #include "util/span.h"
+#include <cstdlib>
 
 CACHE::CACHE(CACHE&& other)
     : operable(other),
@@ -90,6 +91,14 @@ auto CACHE::operator=(CACHE&& other) -> CACHE&
   repl_module_pimpl->bind(this);
 
   return *this;
+}
+
+CACHE::~CACHE()
+{
+  if (trace_file) {
+    pclose(trace_file);
+    trace_file = nullptr;
+  }
 }
 
 CACHE::tag_lookup_type::tag_lookup_type(const request_type& req, bool local_pref, bool skip)
@@ -270,6 +279,15 @@ bool CACHE::try_hit(const tag_lookup_type& handle_pkt)
   const auto hit = (way != set_end);
   const auto useful_prefetch = (hit && way->prefetch && !handle_pkt.prefetch_from_this);
 
+  if (hit && !warmup && trace_file) {
+    fprintf(trace_file, "%ld,%lx,%lx,%s,HIT\n", 
+        (current_time.time_since_epoch() / clock_period),
+        handle_pkt.ip.to<uint64_t>(),
+        handle_pkt.address.to<uint64_t>(),
+        std::string(access_type_names.at(champsim::to_underlying(handle_pkt.type))).c_str()
+    );
+  }
+
   if constexpr (champsim::debug_print) {
     fmt::print("[{}] {} instr_id: {} address: {} v_address: {} data: {} set: {} way: {} ({}) type: {} cycle: {}\n", NAME, __func__, handle_pkt.instr_id,
                handle_pkt.address, handle_pkt.v_address, handle_pkt.data, get_set_index(handle_pkt.address), std::distance(set_begin, way),
@@ -337,6 +355,26 @@ bool CACHE::handle_miss(const tag_lookup_type& handle_pkt)
     fmt::print("[{}] {} instr_id: {} address: {} v_address: {} type: {} local_prefetch: {} cycle: {}\n", NAME, __func__, handle_pkt.instr_id,
                handle_pkt.address, handle_pkt.v_address, access_type_names.at(champsim::to_underlying(handle_pkt.type)), handle_pkt.prefetch_from_this,
                current_time.time_since_epoch() / clock_period);
+  }
+
+  // if (!warmup && trace_file.is_open()) {
+  //      trace_file << (current_time.time_since_epoch() / clock_period) << ","
+  //                 // << handle_pkt.instr_id << ","
+  //                 << handle_pkt.ip << ","
+  //                 << handle_pkt.address << ","
+  //                 << access_type_names.at(champsim::to_underlying(handle_pkt.type))
+  //                 << "\n"
+  //                 // << "MISS_HANDLING" << "," 
+  //                 // << this->NAME << "\n"
+  //                 ;
+  // }
+  if (!warmup && trace_file) {
+    fprintf(trace_file, "%ld,%lx,%lx,%s,MISS\n", 
+        (current_time.time_since_epoch() / clock_period),
+        handle_pkt.ip.to<uint64_t>(),
+        handle_pkt.address.to<uint64_t>(),
+        std::string(access_type_names.at(champsim::to_underlying(handle_pkt.type))).c_str()
+    );
   }
 
   mshr_type to_allocate{handle_pkt, current_time};
@@ -856,6 +894,35 @@ void CACHE::initialize()
 {
   impl_prefetcher_initialize();
   impl_initialize_replacement();
+
+  const char* trace_env = std::getenv("CHAMPSIM_TRACE");
+  bool should_trace = false;
+
+  if (trace_env != nullptr) {
+    std::string env_str(trace_env);
+    if (env_str == "ALL" || this->NAME.find(env_str) != std::string::npos) {
+        should_trace = true;
+    }
+  }
+
+  if (should_trace) {
+    const char* dir_env = std::getenv("CHAMPSIM_TRACE_DIR");
+    std::string out_dir = (dir_env != nullptr) ? std::string(dir_env) : ".";
+
+    const char* id_env = std::getenv("CHAMPSIM_TRACE_ID");
+    std::string trace_id = (id_env != nullptr) ? std::string(id_env) : "unknown";
+
+    std::string filename = out_dir + "/" + trace_id + "_" + this->NAME + ".csv.gz";
+
+    std::string cmd = "gzip -1 > " + filename; 
+    
+    trace_file = popen(cmd.c_str(), "w");
+    if (trace_file) {
+        fprintf(trace_file, "Cycle,IP,Address,Type,Result\n");
+    } else {
+        fmt::print("Error: Failed to open trace file pipeline: {}\n", filename);
+    }
+  }
 }
 
 void CACHE::begin_phase()

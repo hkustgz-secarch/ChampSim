@@ -7,21 +7,6 @@ import pandas as pd
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 输入 Log 目录
-# INPUT_REL_PATH = "../results/log/1C.fullBW.berti_pythia_sms_default"
-# INPUT_REL_PATH = "../results/log/1C.fullBW.baseline_updatePythia"
-# INPUT_REL_PATH = "../results/log/1C.fullBW.nopref_baseline"
-# INPUT_REL_PATH = "../results/log/1C.fullBW.bertiMcmc_pythia_sms_default"
-INPUT_REL_PATH = "../results/log/1C.fullBW.berti_pythia_sms_4096sets_default"
-import os
-import csv
-import re
-import pandas as pd
-
-# ================= 配置区域 =================
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
 # 输入 Log 目录列表 (将需要处理的相对路径都放在这里)
 INPUT_DIR_LIST = [
     # "../results/log/1C.fullBW.berti_pythia_sms_4096sets_default",
@@ -142,14 +127,15 @@ def process_file(filepath, filename):
 def generate_summary(df, output_prefix, output_dir):
     """生成宽表 summary"""
     
-    # 1. 计算 Miss Rate
-    df['MissRate(%)'] = df.apply(lambda x: (x['Miss'] / x['Access'] * 100) if x['Access'] > 0 else 0, axis=1)
+    # 1. 计算 Miss Rate (已修改：此处不再需要计算 Rate，直接使用原始 Miss 数据)
+    # df['MissRate(%)'] = df.apply(lambda x: (x['Miss'] / x['Access'] * 100) if x['Access'] > 0 else 0, axis=1)
     
     # 2. 提取 IPC (去重)
     ipc_df = df[['Filename', 'IPC']].drop_duplicates().set_index('Filename')
     
     # 3. Pivot 透视表
-    pivot_df = df.pivot(index='Filename', columns='Component', values=['Access', 'MissRate(%)'])
+    # [修改] values 列表改为 'Miss' 而不是 'MissRate(%)'
+    pivot_df = df.pivot(index='Filename', columns='Component', values=['Access', 'Miss'])
     
     # 4. 构建理想的列顺序 并 进行重命名
     final_col_order = []
@@ -169,21 +155,21 @@ def generate_summary(df, output_prefix, output_dir):
             # 简化 Operation 名字 (PREFETCH -> PF)
             op_short = "PF" if op == "PREFETCH" else op
             
-            # 构建新的列名 (Acc 代替 Access, MR 代替 MissRate)
+            # 构建新的列名 (Acc 代替 Access, [修改] Miss 代替 MR)
             name_access_new = f"{simple_name}_{op_short}_Acc"
-            name_rate_new = f"{simple_name}_{op_short}_MR"
+            name_miss_new = f"{simple_name}_{op_short}_Miss" # 改为 Miss 后缀
             
             # 原始 Pivot 的 MultiIndex 列名
             col_access_orig = ('Access', comp_key)
-            col_rate_orig = ('MissRate(%)', comp_key)
+            col_miss_orig = ('Miss', comp_key) # [修改] 源列为 Miss
             
             # 存入映射
             new_col_names[col_access_orig] = name_access_new
-            new_col_names[col_rate_orig] = name_rate_new
+            new_col_names[col_miss_orig] = name_miss_new
             
             # 加入顺序列表
             final_col_order.append(name_access_new)
-            final_col_order.append(name_rate_new)
+            final_col_order.append(name_miss_new)
 
     # 5. 应用列名重命名
     pivot_df = pivot_df.fillna(0)
@@ -197,9 +183,10 @@ def generate_summary(df, output_prefix, output_dir):
     final_df = final_df.join(ipc_df)
     
     # 8. 格式化数据
-    # Access/Acc 列转整数
+    # Access/Acc/Miss 列转整数
     for col in final_df.columns:
-        if "Acc" in col or "Access" in col:
+        # [修改] 增加 "Miss" 到判断条件，确保 Miss 数量也显示为整数
+        if "Acc" in col or "Access" in col or "Miss" in col:
             final_df[col] = final_df[col].astype(int)
             
     # 重置索引

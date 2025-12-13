@@ -1,4 +1,6 @@
-# Usage: python3 scripts/run_simulations.py --binary 1C.fullBW.nopref --cores 192 --name baseline
+# Usage Example: 
+# python3 scripts/run_simulations.py --binary 1C.fullBW --cores 192 --trace cpu0_L2C --trace_dir /data/my_traces
+
 import os
 import subprocess
 import re
@@ -7,7 +9,6 @@ import sys
 import multiprocessing
 import argparse
 import time
-import signal
 from concurrent.futures import ProcessPoolExecutor
 
 # ================= 默认配置区域 =================
@@ -16,6 +17,9 @@ BINARY_DIR = "bin"
 DEFAULT_BINARY_NAME = "1C.fullBW.baseline"
 RESULTS_ROOT_DIR = "results"
 DEFAULT_EXP_NAME = "default"
+
+# 默认 Trace 输出根目录
+DEFAULT_TRACE_OUTPUT = os.path.join(RESULTS_ROOT_DIR, "traces")
 
 WARMUP_INST = "50000000"
 SIM_INST = "200000000"
@@ -31,7 +35,7 @@ def parse_arguments():
         '--cores', 
         type=int, 
         default=DEFAULT_CORES,
-        help=f'Max Busy Cores Limit. Script waits if instant CPU usage > this. (Default: {DEFAULT_CORES})'
+        help=f'Max Busy Cores Limit. (Default: {DEFAULT_CORES})'
     )
     
     parser.add_argument(
@@ -47,37 +51,47 @@ def parse_arguments():
         default=DEFAULT_EXP_NAME,
         help=f'Custom experiment name suffix'
     )
+
+    # --- [Trace 控制] ---
+    parser.add_argument(
+        '--trace',
+        type=str,
+        default=None,
+        help='Set CHAMPSIM_TRACE env var (e.g., "ALL", "cpu0_L2C"). Default: None (Disabled).'
+    )
+
+    parser.add_argument(
+        '--trace_dir',
+        type=str,
+        default=DEFAULT_TRACE_OUTPUT,
+        help=f'Root directory to save generated traces. Default: {DEFAULT_TRACE_OUTPUT}'
+    )
     
     return parser.parse_args()
 
 def ensure_dir(directory):
     if not os.path.exists(directory):
         try:
-            os.makedirs(directory)
+            os.makedirs(directory, exist_ok=True)
         except OSError as e:
+            # 忽略多进程同时创建时的冲突错误
             if e.errno != os.errno.EEXIST:
                 raise
 
 # === [核心功能] 读取 Linux 内核实时 CPU 数据 ===
 def read_proc_stat():
-    """读取 /proc/stat 第一行，返回总 CPU 时间和 Idle 时间"""
-    with open('/proc/stat', 'r') as f:
-        line = f.readline()
-    # 格式: cpu  user nice system idle iowait irq softirq ...
-    parts = line.split()
-    # 这一行所有数值加起来是 Total Time
-    # 第 4 列 (index 4, 实际上 parts[4] 是 idle) 是 Idle Time
-    # 注意: parts[0] 是 "cpu"，所以数值从 parts[1] 开始
-    values = [int(x) for x in parts[1:]]
-    total_time = sum(values)
-    idle_time = values[3] # idle
-    return total_time, idle_time
+    try:
+        with open('/proc/stat', 'r') as f:
+            line = f.readline()
+        parts = line.split()
+        values = [int(x) for x in parts[1:]]
+        total_time = sum(values)
+        idle_time = values[3] 
+        return total_time, idle_time
+    except FileNotFoundError:
+        return 0, 0
 
 def get_instant_busy_cores(interval=0.1):
-    """
-    计算瞬时忙碌核心数。
-    原理：采样两次 /proc/stat，计算差值。这等同于 top 命令的实时视图。
-    """
     try:
         t1, i1 = read_proc_stat()
         time.sleep(interval)
@@ -86,19 +100,14 @@ def get_instant_busy_cores(interval=0.1):
         delta_total = t2 - t1
         delta_idle = i2 - i1
         
-        if delta_total == 0: return 0.0
+        if delta_total == 0: return 0.0, 0.0
         
-        # CPU 使用率 = 1 - (空闲时间增量 / 总时间增量)
         usage_percent = 1.0 - (delta_idle / delta_total)
-        
-        # 忙碌核心数 = 使用率 * 总逻辑核心数
-        # 例如：50% 使用率 * 192 核 = 96 个忙碌核心
         total_cores = multiprocessing.cpu_count()
         busy_cores = usage_percent * total_cores
         
         return busy_cores, usage_percent * 100.0
     except Exception:
-        # 如果不是 Linux 或读取失败，返回 0 以免阻塞
         return 0.0, 0.0
 
 # ===========================================
@@ -111,10 +120,16 @@ def parse_output(output_text):
     return None, "0", "0"
 
 def run_single_trace(task_info):
-    rel_folder, file_name, full_trace_path, binary_full_path, output_log_dir = task_info
+    # 解包参数
+    # experiment_id 用于构建子目录
+    rel_folder, file_name, full_trace_path, binary_full_path, output_log_dir, trace_config = task_info
+    
+    trace_arg = trace_config['mode']
+    trace_root = trace_config['root_dir']
+    experiment_id = trace_config['exp_id']
 
-    # 打印开始日志
-    print(f"[Started] {rel_folder}/{file_name}", flush=True) 
+    trace_msg = f" [TRACE={trace_arg}]" if trace_arg else ""
+    print(f"[Started] {rel_folder}/{file_name}{trace_msg}", flush=True) 
 
     cmd = [
         binary_full_path,
@@ -123,17 +138,41 @@ def run_single_trace(task_info):
         full_trace_path
     ]
 
+    # --- [环境变量配置] ---
+    env_vars = os.environ.copy()
+    
+    if trace_arg:
+        # 1. 开启 Trace
+        env_vars["CHAMPSIM_TRACE"] = trace_arg
+        
+        # 2. 设置 Trace ID (确保并行唯一性，使用 trace 文件名)
+        env_vars["CHAMPSIM_TRACE_ID"] = file_name
+        
+        # 3. 设置具体的输出目录
+        # 结构: <TraceRoot>/<ExperimentID>/<Category>/
+        safe_rel_folder = rel_folder.replace(os.sep, '_')
+        if safe_rel_folder == ".": safe_rel_folder = "root"
+        
+        specific_trace_dir = os.path.join(trace_root, experiment_id, safe_rel_folder)
+        
+        # 确保目录存在 (多进程安全)
+        os.makedirs(specific_trace_dir, exist_ok=True)
+        
+        env_vars["CHAMPSIM_TRACE_DIR"] = specific_trace_dir
+
     try:
         start_time = time.time()
         result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, 
-            text=True
+            text=True,
+            env=env_vars 
         )
         duration = time.time() - start_time
         output_content = result.stdout
         
+        # 结果日志保存
         safe_rel_folder = rel_folder.replace(os.sep, '_')
         if safe_rel_folder == ".": safe_rel_folder = "root"
         
@@ -169,8 +208,6 @@ def run_single_trace(task_info):
 def cleanup_processes(binary_name):
     print("\n" + "!" * 80)
     print("Force stopping all simulation processes...")
-    # 使用 pkill 杀死所有匹配二进制名称的进程
-    # -f 匹配全名
     ret = os.system(f"pkill -f {binary_name}")
     if ret == 0:
         print(f"Successfully killed processes matching '{binary_name}'")
@@ -185,6 +222,8 @@ def main():
     # 路径构建
     binary_full_path = os.path.join(os.getcwd(), BINARY_DIR, args.binary)
     experiment_id = f"{args.binary}_{args.name}"
+    
+    # 日志和 CSV 输出
     current_output_dir = os.path.join(os.getcwd(), RESULTS_ROOT_DIR, 'log', experiment_id)
     csv_file_path = os.path.join(os.getcwd(), RESULTS_ROOT_DIR, f"{experiment_id}.csv")
 
@@ -193,7 +232,14 @@ def main():
     print(f"Binary Path      : {binary_full_path}")
     print(f"Log Dir          : {current_output_dir}")
     print(f"CSV Output       : {csv_file_path}")
-    print(f"Core Limit       : {core_limit} (Real-time /proc/stat monitor)")
+    print(f"Core Limit       : {core_limit}")
+    
+    if args.trace:
+        # 这里的目录会在 run_single_trace 中结合 experiment_id 进一步细分
+        print(f"Trace Enabled    : YES ({args.trace})")
+        print(f"Trace Root Dir   : {args.trace_dir}")
+    else:
+        print(f"Trace Enabled    : NO")
     print("=" * 80)
 
     if not os.path.exists(binary_full_path):
@@ -202,12 +248,23 @@ def main():
 
     ensure_dir(current_output_dir)
     ensure_dir(os.path.dirname(csv_file_path))
+    
+    # 预先创建 trace 根目录
+    if args.trace:
+        ensure_dir(args.trace_dir)
 
     tasks = []
     print(f"Scanning traces in: {TRACE_ROOT} ...")
     if not os.path.exists(TRACE_ROOT):
         print(f"Error: Trace root not found: {TRACE_ROOT}")
         sys.exit(1)
+
+    # 打包 Trace 配置
+    trace_config = {
+        'mode': args.trace,
+        'root_dir': args.trace_dir,
+        'exp_id': experiment_id
+    }
 
     for root, dirs, files in os.walk(TRACE_ROOT):
         rel_folder = os.path.relpath(root, TRACE_ROOT)
@@ -219,7 +276,8 @@ def main():
                     file, 
                     os.path.join(root, file),
                     binary_full_path,
-                    current_output_dir
+                    current_output_dir,
+                    trace_config
                 ))
     
     total_tasks = len(tasks)
@@ -269,14 +327,11 @@ def main():
             # B. 提交新任务 (实时 /proc/stat 监控)
             while pending_tasks and len(running_futures) < core_limit:
                 
-                # 获取实时忙碌核心数 (耗时 0.1s)
                 current_busy_cores, current_usage_pct = get_instant_busy_cores(interval=0.1)
                 
-                # 如果当前忙碌核心数 >= 设定上限，暂停提交
                 if current_busy_cores >= core_limit:
                     sys.stdout.write(f"\r[Monitor] High Load: {int(current_busy_cores)} busy cores ({current_usage_pct:.1f}%). Limit: {core_limit}. Waiting...   ")
                     sys.stdout.flush()
-                    # 发现负载高时，多等一会儿 (2秒)，避免频繁采样
                     time.sleep(2) 
                     break 
                 
@@ -284,18 +339,11 @@ def main():
                 future = executor.submit(run_single_trace, task)
                 running_futures.add(future)
                 
-                # 清空监控行
                 sys.stdout.write("\r" + " " * 80 + "\r")
-                
-                # 注意：get_instant_busy_cores 内部已经 sleep 了 0.1s
-                # 这天然构成了“慢启动”机制 (192个任务启动至少需要19秒)
-                # 这能完美防止负载瞬间冲顶。
             
-            # 外层循环极短休眠
             time.sleep(0.01)
 
     except KeyboardInterrupt:
-        # 捕获 Ctrl+C
         cleanup_processes(args.binary)
         executor.shutdown(wait=False, cancel_futures=True)
         sys.exit(130)

@@ -13,7 +13,8 @@ TRACE_ROOT = "/local-ssd/ben/dpc4-traces"  # 必须与批量脚本一致，用�
 BINARY_DIR = "bin"
 RESULTS_ROOT_DIR = "results"
 
-DEFAULT_BINARY_NAME = "1C.limitBW.baseline"
+# DEFAULT_BINARY_NAME = "1C.limitBW.baseline"
+DEFAULT_BINARY_NAME = "1C.fullBW.baseline"
 DEFAULT_EXP_NAME = "baseline"
 
 WARMUP_INST = "50000000"
