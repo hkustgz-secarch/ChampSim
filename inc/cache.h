@@ -46,6 +46,7 @@
 #include "operable.h"
 #include "util/to_underlying.h" // for to_underlying
 #include "waitable.h"
+#include <fstream>
 
 class CACHE : public champsim::operable
 {
@@ -61,6 +62,8 @@ class CACHE : public champsim::operable
   using channel_type = champsim::channel;
   using request_type = typename channel_type::request_type;
   using response_type = typename channel_type::response_type;
+  // std::ofstream trace_file;
+  FILE* trace_file = nullptr;
 
   struct tag_lookup_type {
     champsim::address address;
@@ -337,6 +340,8 @@ public:
   CACHE(CACHE&&);
   CACHE& operator=(const CACHE&) = delete;
   CACHE& operator=(CACHE&&);
+
+  virtual ~CACHE();
 };
 
 template <typename... Ps>
