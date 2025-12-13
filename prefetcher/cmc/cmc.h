@@ -6,6 +6,8 @@
 #include <list>
 #include <unordered_map>
 #include <cstdint>
+#include <iostream>
+#include <algorithm>
 
 // 必须包含 cache.h 以识别 CACHE* 类型
 #include "cache.h"

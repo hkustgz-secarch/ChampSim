@@ -6,6 +6,9 @@
 #include <iostream>
 #include <cmath>
 #include <cassert>
+#include <cstdlib>
+#include <cmath>
+#include <vector>
 
 #include "modules.h"
 #include "address.h"

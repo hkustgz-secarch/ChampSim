@@ -1,7 +1,5 @@
 #include "berti_gaze.h"
 #include "cache.h" // Needed for some constants if strictly required, usually modules.h is enough
-#include <algorithm>
-#include <iostream>
 
 using namespace berti_space;
 

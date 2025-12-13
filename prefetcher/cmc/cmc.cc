@@ -1,6 +1,4 @@
 #include "cmc.h"
-#include <iostream>
-#include <algorithm>
 
 // =============================================================
 // Recorder Implementation

@@ -1,8 +1,5 @@
 #include "berti_micro.h"
 #include "cache.h"
-#include <cstdlib>
-#include <cmath>
-#include <vector>
 
 // Define features from legacy code
 #define CONTINUE_BURST

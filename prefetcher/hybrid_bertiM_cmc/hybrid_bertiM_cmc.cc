@@ -1,7 +1,5 @@
 #include "hybrid_bertiM_cmc.h"
 #include "cache.h"
-#include <cstdlib>
-#include <algorithm>
 
 // Define features for Berti
 #define CONTINUE_BURST

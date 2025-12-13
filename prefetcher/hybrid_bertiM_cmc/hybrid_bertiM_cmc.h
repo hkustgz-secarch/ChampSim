@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <cmath>
 #include <cassert>
+#include <cstdlib>
+#include <algorithm>
 
 #include "modules.h"
 #include "address.h"
