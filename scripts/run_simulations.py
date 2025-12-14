@@ -1,5 +1,5 @@
 # Usage Example: 
-# python3 scripts/run_simulations.py --binary 1C.fullBW --cores 192 --trace cpu0_L2C --trace_dir /data/my_traces
+# python3 scripts/run_simulations.py --binary 1C.fullBW.baseline --cores 192 --name dataonlytrace --trace ALL --trace_dir /local-ssd/ben/dpc4-traces/logs
 
 import os
 import subprocess
@@ -270,6 +270,10 @@ def main():
         rel_folder = os.path.relpath(root, TRACE_ROOT)
         if rel_folder == ".": rel_folder = "root"
         for file in files:
+            if file.endswith('.csv.gz'):
+                continue
+            if file.endswith('.log'):
+                continue
             if file.endswith('.gz') or file.endswith('.xz'):
                 tasks.append((
                     rel_folder, 
