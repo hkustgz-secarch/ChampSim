@@ -7,7 +7,7 @@
 
 #include "champsim.h"
 
-drrip::drrip(CACHE* cache) : replacement(cache), NUM_SET(cache->NUM_SET), NUM_WAY(cache->NUM_WAY), rrpv(static_cast<std::size_t>(NUM_SET * NUM_WAY))
+drrip::drrip(CACHE* cache) : replacement(cache), NUM_SET(cache->NUM_SET), NUM_WAY(cache->NUM_WAY), brrip_counter(0), rrpv(static_cast<std::size_t>(NUM_SET * NUM_WAY))
 {
   std::fill_n(std::back_inserter(PSEL), NUM_CPUS, typename decltype(PSEL)::value_type{1 << (PSEL_WIDTH - 1)});
 }
