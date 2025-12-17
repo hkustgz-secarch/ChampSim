@@ -14,7 +14,9 @@ INPUT_DIR_LIST = [
     # "../results/log/1C.fullBW.baseline_updatePythia",
     # "../results/log/1C.fullBW.nopref_baseline",
     # "../results/log/1C.fullBW.bertiMcmc_pythia_sms_default",
-    "../results/log/1C.fullBW.cmc_pythia_sms_default",
+    # "../results/log/1C.fullBW.cmc_pythia_sms_default",
+    # "../results/log/1C.fullBW.nextline_pythia_sms_s20_pfrefill",
+    "../results/log/1C.fullBW.berti_pythia_sms_pfrefill",
 ]
 
 # 输出目录
